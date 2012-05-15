@@ -21,7 +21,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 	buf := make([]byte, 256)
 	n, err := local.Read(buf)
 	if err != nil || n < 2 {
-		log.Println("unable to read SOCKS header", err)
+		log.Printf("[%s] unable to read SOCKS header: %v", local.RemoteAddr(), err)
 		return
 	}
 	buf = buf[:n]
@@ -57,7 +57,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 		auths, buf := buf[:authlen], buf[authlen:]
 		log.Printf("incoming SOCKS5 request, auths=%v", auths)
 		if !bytes.Contains(auths, []byte{0}) {
-			log.Println("unsuported authentication method")
+			log.Printf("[%s] unsuported SOCKS5 authentication method", local.RemoteAddr())
 			local.Write([]byte{0x05, 0xff})
 			return
 		}
@@ -65,7 +65,8 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 		buf = make([]byte, 256)
 		n, err := local.Read(buf)
 		if err != nil {
-			log.Println("unable to read SOCKS header", err)
+			log.Printf("[%s] unable to read SOCKS header: %v", local.RemoteAddr(), err)
+			return
 		}
 		buf = buf[:n]
 		switch version := buf[0]; version {
