@@ -77,8 +77,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					ip := net.IP(buf[1:5])
 					port := binary.BigEndian.Uint16(buf[5:6])
 					addr := &net.TCPAddr{ip, int(port)}
-					log.Printf("incoming SOCKS4 request, version=%d, command=%v, raddr=%v, user=%s\n", version, command, addr, user)
-
+					log.Printf("incoming SOCKS4 TCP/IP stream connection, raddr=%v\n", addr)
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
 						log.Println("unable to connect to remote host", err)
