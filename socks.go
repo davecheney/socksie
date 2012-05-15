@@ -22,6 +22,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 	n, err := local.Read(buf)
 	if err != nil || n < 2 {
 		log.Println("unable to read SOCKS header", err)
+		return
 	}
 	buf = buf[:n]
 
