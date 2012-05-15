@@ -36,21 +36,21 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 			buf := buf[8:]
 			i := bytes.Index(buf, []byte{0})
 			if i < 0 {
-				log.Println("unable to locate SOCKS4 user")
+				log.Printf("[%s] unable to locate SOCKS4 user", local.RemoteAddr())
+				return
 			}
 			user := buf[:i]
-			log.Printf("incoming SOCKS4 TCP/IP stream connection, raddr=%v, user=%s\n", addr, user)
+			log.Printf("[%s] incoming SOCKS4 TCP/IP stream connection, user=%q, raddr=%s", local.RemoteAddr(), user, addr)
 			remote, err := dialer.DialTCP("tcp4", local.RemoteAddr().(*net.TCPAddr), addr)
 			if err != nil {
-				log.Println("unable to connect to remote host", err)
+				log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)
 				local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 				return
 			}
-			log.Println("connection succeeded to", remote.RemoteAddr())
 			local.Write([]byte{0, 0x5a, 0, 0, 0, 0, 0, 0})
 			transfer(local, remote)
 		default:
-			log.Println("unsupported command, closing connection")
+			log.Println("[%s] unsupported command, closing connection", local.RemoteAddr())
 		}
 	case 5:
 		authlen, buf := buf[1], buf[2:]
@@ -78,14 +78,13 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					ip := net.IP(buf[1:5])
 					port := binary.BigEndian.Uint16(buf[5:6])
 					addr := &net.TCPAddr{ip, int(port)}
-					log.Printf("incoming SOCKS4 TCP/IP stream connection, raddr=%v\n", addr)
+					log.Printf("[%s] incoming SOCKS5 TCP/IP stream connection, raddr=%s", local.RemoteAddr(), addr)
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
-						log.Println("unable to connect to remote host", err)
-						// TODO(dfc) send proper disconnection
+						log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)
+						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 						return
 					}
-					log.Println("connection succeeded to", remote.RemoteAddr())
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, ip[0], ip[1], ip[2], ip[3], byte(port >> 8), byte(port)})
 					transfer(local, remote)
 				case 3:
@@ -93,32 +92,31 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					name, buf := buf[:addrlen], buf[addrlen:]
 					ip, err := net.ResolveIPAddr("tcp", string(name))
 					if err != nil {
-						log.Println("unable to resolve IP address:", err)
+						log.Printf("[%s] unable to resolve IP address: %q, %v", local.RemoteAddr(), name, err)
 						return
 					}
 					port := binary.BigEndian.Uint16(buf[:2])
 					addr := &net.TCPAddr{ip.IP, int(port)}
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
-						log.Println("unable to connect to remote host", err)
-						// TODO(dfc) send proper disconnection
+						log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)
+						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 						return
 					}
-					log.Println("connection succeeded to", remote.RemoteAddr())
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, addr.IP[0], addr.IP[1], addr.IP[2], addr.IP[3], byte(port >> 8), byte(port)})
 					transfer(local, remote)
 
 				default:
-					log.Println("unsupported SOCKS5 address type:", addrtype)
+					log.Printf("[%s] unsupported SOCKS5 address type: %d", local.RemoteAddr(), addrtype)
 				}
 			default:
-				log.Println("unknown SOCKS5 command:", command)
+				log.Printf("[%s] unknown SOCKS5 command: %d", local.RemoteAddr(), command)
 			}
 		default:
-			log.Println("unknown version after SOCKS5 handshake:", version)
+			log.Printf("[%s] unnknown version after SOCKS5 handshake: %d", local.RemoteAddr(), version)
 		}
 	default:
-		log.Println("unknown version:", version)
+		log.Printf("[%s] unknown SOCKS version: %d", local.RemoteAddr(), version)
 	}
 }
 
