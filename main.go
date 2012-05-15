@@ -39,7 +39,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	addr = fmt.Sprintf("%s:%d", "localhost", *PORT)
+	addr = fmt.Sprintf("%s:%d", "0", *PORT)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("unable to listen on SOCKS port [%s]: %v", addr, err)
