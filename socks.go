@@ -55,7 +55,6 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 	case 5:
 		authlen, buf := buf[1], buf[2:]
 		auths, buf := buf[:authlen], buf[authlen:]
-		log.Printf("incoming SOCKS5 request, auths=%v", auths)
 		if !bytes.Contains(auths, []byte{0}) {
 			log.Printf("[%s] unsuported SOCKS5 authentication method", local.RemoteAddr())
 			local.Write([]byte{0x05, 0xff})
