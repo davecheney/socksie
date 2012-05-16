@@ -75,6 +75,10 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 				buf = buf[3:]
 				switch addrtype := buf[0]; addrtype {
 				case 1:
+					if len(buf) < 7 {
+						log.Printf("[%s] corrupt SOCKS5 TCP/IP stream connection request", local.RemoteAddr())
+						return
+					}
 					ip := net.IP(buf[1:5])
 					port := binary.BigEndian.Uint16(buf[5:6])
 					addr := &net.TCPAddr{ip, int(port)}
