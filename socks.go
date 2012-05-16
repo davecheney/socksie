@@ -133,6 +133,6 @@ func transfer(in, out net.Conn) {
 		wg.Done()
 	}
 	go f(in, out, wg)
-	go f(out, in, wg)
+	f(out, in, wg)
 	wg.Wait()
 }
