@@ -75,7 +75,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 				buf = buf[3:]
 				switch addrtype := buf[0]; addrtype {
 				case 1:
-					if len(buf) < 7 {
+					if len(buf) < 8 {
 						log.Printf("[%s] corrupt SOCKS5 TCP/IP stream connection request", local.RemoteAddr())
 						return
 					}
