@@ -47,6 +47,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 				local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 				return
 			}
+			defer remote.Close()
 			local.Write([]byte{0, 0x5a, 0, 0, 0, 0, 0, 0})
 			transfer(local, remote)
 		default:
@@ -89,6 +90,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 						return
 					}
+					defer remote.Close()
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, ip[0], ip[1], ip[2], ip[3], byte(port >> 8), byte(port)})
 					transfer(local, remote)
 				case 3:
@@ -107,6 +109,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
 						return
 					}
+					defer remote.Close()
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, addr.IP[0], addr.IP[1], addr.IP[2], addr.IP[3], byte(port >> 8), byte(port)})
 					transfer(local, remote)
 
