@@ -130,7 +130,12 @@ func transfer(in, out net.Conn) {
 	f := func(in, out net.Conn, wg *sync.WaitGroup) {
 		n, err := io.Copy(out, in)
 		log.Printf("xfer done, in=%v, out=%v, transfered=%d, err=%v", in.RemoteAddr(), out.RemoteAddr(), n, err)
-		in.(*net.TCPConn).CloseWrite()
+		if conn, ok := in.(*net.TCPConn); ok {
+			conn.CloseWrite()
+		}
+		if conn, ok := out.(*net.TCPConn); ok {
+			conn.CloseRead()
+		}
 		wg.Done()
 	}
 	go f(in, out, wg)
