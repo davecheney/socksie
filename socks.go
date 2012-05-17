@@ -77,6 +77,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 				case 1:
 					if len(buf) < 8 {
 						log.Printf("[%s] corrupt SOCKS5 TCP/IP stream connection request", local.RemoteAddr())
+						local.Write([]byte{0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 						return
 					}
 					ip := net.IP(buf[1:5])
@@ -86,7 +87,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
 						log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)
-						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
+						local.Write([]byte{0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 						return
 					}
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, ip[0], ip[1], ip[2], ip[3], byte(port >> 8), byte(port)})
@@ -97,6 +98,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					ip, err := net.ResolveIPAddr("tcp", string(name))
 					if err != nil {
 						log.Printf("[%s] unable to resolve IP address: %q, %v", local.RemoteAddr(), name, err)
+						local.Write([]byte{0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 						return
 					}
 					port := binary.BigEndian.Uint16(buf[:2])
@@ -104,7 +106,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
 						log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)
-						local.Write([]byte{0, 0x5b, 0, 0, 0, 0, 0, 0})
+						local.Write([]byte{0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 						return
 					}
 					local.Write([]byte{0x05, 0x00, 0x00, 0x01, addr.IP[0], addr.IP[1], addr.IP[2], addr.IP[3], byte(port >> 8), byte(port)})
@@ -112,12 +114,15 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 
 				default:
 					log.Printf("[%s] unsupported SOCKS5 address type: %d", local.RemoteAddr(), addrtype)
+					local.Write([]byte{0x05, 0x08, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 				}
 			default:
 				log.Printf("[%s] unknown SOCKS5 command: %d", local.RemoteAddr(), command)
+				local.Write([]byte{0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 			}
 		default:
 			log.Printf("[%s] unnknown version after SOCKS5 handshake: %d", local.RemoteAddr(), version)
+			local.Write([]byte{0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 		}
 	default:
 		log.Printf("[%s] unknown SOCKS version: %d", local.RemoteAddr(), version)
