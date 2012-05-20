@@ -52,6 +52,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to accept incoming SOCKS connection: %v", err)
 		}
+		accepted.Inc()
 		go handleConn(c.(*net.TCPConn), conn)
 	}
 	log.Println("waiting for all existing connections to finish")

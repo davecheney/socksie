@@ -13,8 +13,10 @@ var connections = new(sync.WaitGroup)
 
 func handleConn(local *net.TCPConn, dialer Dialer) {
 	connections.Add(1)
+	active.Inc()
 	defer local.Close()
 	defer connections.Done()
+	defer active.Dec()
 
 	// SOCKS does not include a length in the header, so take
 	// a punt that each request will be readable in one go.	
