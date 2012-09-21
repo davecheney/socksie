@@ -26,11 +26,17 @@ type Dialer interface {
 }
 
 func main() {
+	var auths []ssh.ClientAuth
+	if agent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
+		auths = append(auths, ssh.ClientAuthAgent(ssh.NewAgentClient(agent)))
+	}
+	if *PASS != "" {
+		auths = append(auths, ssh.ClientAuthPassword(password(*PASS)))
+	}
+
 	config := &ssh.ClientConfig{
 		User: *USER,
-		Auth: []ssh.ClientAuth{
-			ssh.ClientAuthPassword(password(*PASS)),
-		},
+		Auth: auths,
 	}
 	addr := fmt.Sprintf("%s:%d", *HOST, 22)
 	conn, err := ssh.Dial("tcp", addr, config)

@@ -5,6 +5,6 @@ import (
 )
 
 var (
-	active = gmx.NewGuage("socksie.connections.active")
+	active   = gmx.NewGuage("socksie.connections.active")
 	accepted = gmx.NewCounter("socksie.connections.accepted")
-)	
+)
