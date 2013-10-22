@@ -19,7 +19,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 	defer active.Dec()
 
 	// SOCKS does not include a length in the header, so take
-	// a punt that each request will be readable in one go.	
+	// a punt that each request will be readable in one go.
 	buf := make([]byte, 256)
 	n, err := local.Read(buf)
 	if err != nil || n < 2 {
@@ -34,7 +34,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 		case 1:
 			port := binary.BigEndian.Uint16(buf[2:4])
 			ip := net.IP(buf[4:8])
-			addr := &net.TCPAddr{ip, int(port)}
+			addr := &net.TCPAddr{IP: ip, Port: int(port)}
 			buf := buf[8:]
 			i := bytes.Index(buf, []byte{0})
 			if i < 0 {
@@ -52,7 +52,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 			local.Write([]byte{0, 0x5a, 0, 0, 0, 0, 0, 0})
 			transfer(local, remote)
 		default:
-			log.Println("[%s] unsupported command, closing connection", local.RemoteAddr())
+			log.Printf("[%s] unsupported command, closing connection", local.RemoteAddr())
 		}
 	case 5:
 		authlen, buf := buf[1], buf[2:]
@@ -84,7 +84,7 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 					}
 					ip := net.IP(buf[1:5])
 					port := binary.BigEndian.Uint16(buf[5:6])
-					addr := &net.TCPAddr{ip, int(port)}
+					addr := &net.TCPAddr{IP: ip, Port: int(port)}
 					log.Printf("[%s] incoming SOCKS5 TCP/IP stream connection, raddr=%s", local.RemoteAddr(), addr)
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
@@ -97,14 +97,14 @@ func handleConn(local *net.TCPConn, dialer Dialer) {
 				case 3:
 					addrlen, buf := buf[1], buf[2:]
 					name, buf := buf[:addrlen], buf[addrlen:]
-					ip, err := net.ResolveIPAddr("tcp", string(name))
+					ip, err := net.ResolveIPAddr("ip", string(name))
 					if err != nil {
 						log.Printf("[%s] unable to resolve IP address: %q, %v", local.RemoteAddr(), name, err)
 						local.Write([]byte{0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0})
 						return
 					}
 					port := binary.BigEndian.Uint16(buf[:2])
-					addr := &net.TCPAddr{ip.IP, int(port)}
+					addr := &net.TCPAddr{IP: ip.IP, Port: int(port)}
 					remote, err := dialer.DialTCP("tcp", local.RemoteAddr().(*net.TCPAddr), addr)
 					if err != nil {
 						log.Printf("[%s] unable to connect to remote host: %v", local.RemoteAddr(), err)

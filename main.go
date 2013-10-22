@@ -1,6 +1,6 @@
 package main
 
-// socksie is a SOCKS4/5 compatible proxy that forwards connections via 
+// socksie is a SOCKS4/5 compatible proxy that forwards connections via
 // SSH to a remote host
 
 import (
