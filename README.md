@@ -8,6 +8,6 @@ Fight the man, eat dogfood, amaze your friends.
 Usage
 =====
 
-     socksie -h your.remote.host
+     socksie -host your.remote.host
 
 Then configure your web browser to use a SOCKS4/5 proxy on localhost:1080
