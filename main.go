@@ -10,6 +10,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/davecheney/profile"
 )
 
 var (
@@ -26,12 +28,11 @@ type Dialer interface {
 }
 
 func main() {
-	var auths []ssh.ClientAuth
-	if agent, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK")); err == nil {
-		auths = append(auths, ssh.ClientAuthAgent(ssh.NewAgentClient(agent)))
-	}
+	defer profile.Start(profile.CPUProfile).Stop()
+
+	var auths []ssh.AuthMethod
 	if *PASS != "" {
-		auths = append(auths, ssh.ClientAuthPassword(password(*PASS)))
+		auths = append(auths, ssh.Password(*PASS))
 	}
 
 	config := &ssh.ClientConfig{
