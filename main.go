@@ -4,14 +4,13 @@ package main
 // SSH to a remote host
 
 import (
-	"code.google.com/p/go.crypto/ssh"
 	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
 
-	"github.com/davecheney/profile"
+	"golang.org/x/crypto/ssh"
 )
 
 var (
@@ -28,8 +27,6 @@ type Dialer interface {
 }
 
 func main() {
-	defer profile.Start(profile.CPUProfile).Stop()
-
 	var auths []ssh.AuthMethod
 	if *PASS != "" {
 		auths = append(auths, ssh.Password(*PASS))
@@ -59,7 +56,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to accept incoming SOCKS connection: %v", err)
 		}
-		accepted.Inc()
 		go handleConn(c.(*net.TCPConn), conn)
 	}
 	log.Println("waiting for all existing connections to finish")
